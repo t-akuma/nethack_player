@@ -1,0 +1,147 @@
+# nethack-player skill 用の .nethackrc  (NetHack 5.0.0 で検証済み)
+#
+# 目的:
+#   1. 画面をテキストとして安定して読み取れるようにする
+#   2. Claude の送るキーが事故を起こさないようにする
+#   3. 起動時の余計なプロンプトを消す
+#
+# 使い方: scripts/cmux_nethack.sh start が
+#   NETHACKOPTIONS='@<このファイル>' nethack
+# の形で起動するため、~/.nethackrc にコピーする必要は無い。
+# '@' 付きの NETHACKOPTIONS は「このファイルだけを設定として読む」指定なので、
+# ユーザー個人の ~/.nethackrc は読まれない(実測で確認済み)。
+#
+# これは「人が遊ぶための設定」ではなく「画面を機械的に読むための設定」である。
+# 色もメニューの装飾も無く、人間が遊ぶには不便なので、ユーザーの既定にはしないこと。
+#
+# 検証方法: NETHACKOPTIONS=@<path> でこのファイルを読ませて起動し、
+# "Error: ..." が出ないことを確認した (NetHack 5.0.0 MacOS build)。
+
+
+# ============================================================
+# 1. windowtype は必ず最初に書く
+# ============================================================
+# 他のオプションの可否を変えるため、Guidebook が「最初に設定せよ」と指定している。
+#
+# このビルドは tty と curses の両方を含む。curses を選ぶとメニューが
+# 罫線付きのポップアップとしてマップに重なって描画され、read-screen の
+# 結果が下のように壊れてパースできなくなる:
+#
+#   Shall I pick characterlqqqqqqqqqqqqqqqqqqqqqqqkfor you? [ynaq]
+#   NetHack, Copyright 198x Pick a role or profession        x
+#
+# tty を明示的に固定すること。
+OPTIONS=windowtype:tty
+
+
+# ============================================================
+# 2. 起動時のプロンプトを消す
+# ============================================================
+# NetHack 5.0 で追加された「Do you want a tutorial?」メニュー。
+# 設定しないと起動直後に想定外のメニューが出る。
+OPTIONS=!tutorial
+OPTIONS=!news
+OPTIONS=!splash_screen
+
+
+# ============================================================
+# 3. 入力事故の防止(最重要)
+# ============================================================
+# altmeta を有効にすると、NetHack は「Escape の次に来た文字」を
+# meta+文字 として解釈する。時間差は関係なく、1秒空けても合成される。
+# このスキルは「プロンプトを Escape で取り消してから次のキーを送る」ので、
+# altmeta が有効だと下記のような暴発が起きる(実測で確認済み):
+#
+#   Escape → 'p'  =  M-p  =  #pray          (困っていないのに祈る = 神の怒り)
+#   Escape → 'X'  =  M-X  =  #exploremode   (以後スコアが付かない)
+#   Escape → 'o'  =  M-o  =  #offer
+#   Escape → 'd'  =  M-d  =  #dip
+#
+# 必ず無効にすること。
+OPTIONS=!altmeta
+
+# number_pad は真偽値ではなく 0〜4 の値を取る。
+# "OPTIONS=!number_pad" は 5.0.0 では設定エラーになりゲームが起動しない。
+# 0 = vi風キー (yuhjklbn)
+OPTIONS=number_pad:0
+
+OPTIONS=!autopickup
+OPTIONS=!autodig
+OPTIONS=safe_pet
+
+# paranoid_confirmation は「置き換え」であって「追加」ではない。
+# 既定値 (pray swim trap) を書かずに上書きすると、水/溶岩への進入防止(swim)と
+# 既知の罠への進入確認(trap)という最重要の安全弁が消える。必ず含めること。
+#
+# Confirm を入れると y ではなく "yes" のフルタイプが必要になる。
+# 誤って送られた1文字が致命的な確定操作にならないので、自動プレイ向き。
+#
+# 注意: Guidebook 5.0.0 は満腹時の確認を "eating" と書いているが、
+# 実際のパーサが受け付けるのは "eat"。"eating" は設定エラーになる(実測)。
+OPTIONS=paranoid_confirmation:pray swim trap attack Remove wand-break eat Confirm
+
+
+# ============================================================
+# 4. 画面をテキストとして安定させる
+# ============================================================
+# 5.0.0 では DECgraphics / IBMgraphics は独立した真偽オプションではなく
+# symset の値。default を明示すれば ASCII のままになる。
+OPTIONS=symset:default
+
+OPTIONS=!color
+OPTIONS=!lit_corridor
+OPTIONS=!popup_dialog
+
+# 過去メッセージは1件ずつ表示 (s = single)
+OPTIONS=msg_window:s
+
+# メニューは画面を消してから全面に描く。重なりが無いのでパースしやすい。
+# ただしメニュー表示中はステータス行が見えなくなる点に注意(commands.md 参照)。
+OPTIONS=!menu_overlay
+OPTIONS=menustyle:full
+OPTIONS=statuslines:2
+
+# 走る系コマンド(G/_ など)の途中経過を描画しない。
+# 既定の "run" だと数歩ごとに再描画されるため、送信直後の read-screen が
+# 移動途中の画面を掴むことがある。teleport なら移動完了後の1枚だけ。
+OPTIONS=runmode:teleport
+
+
+# ============================================================
+# 5. 状況を「文字で」拾えるようにする
+# ============================================================
+# 壁にぶつかったことをメッセージで教える。画面が変わらない=詰まりの検知に効く。
+OPTIONS=mention_walls
+
+# 階段・泉・祭壇などの上に乗ったときメッセージを出す。
+OPTIONS=mention_decor
+
+# 位置選択(farlook `;` / travel `_`)中にカーソル下の説明を出す
+OPTIONS=autodescribe
+# その説明に map 座標 <x,y> を付ける。travel の目標指定で効く。
+OPTIONS=whatis_coord:m
+
+OPTIONS=showexp
+OPTIONS=time
+OPTIONS=cmdassist
+
+# hilite_pet は色/反転表示なので、read-screen のテキストには現れない。
+# 画面を見ているユーザー向けの設定であって、Claude はペットの判別に使えない。
+# Claude は farlook (`;`) の "your kitten" 等で判別すること。
+OPTIONS=hilite_pet
+
+# 死亡時に持ち物・能力・撃破数・行動指針・ダンジョン概観を
+# 確認プロンプト無しで全部出す。死因の記録に使う。
+OPTIONS=disclose:+i +a +v +g +c +o
+
+# 注意: showscore はこのビルドではステータス行に現れない
+# (SCORE_ON_BOTL 無しでビルドされている)。設定しても無害だが効かない。
+
+
+# ============================================================
+# 6. キャラクター設定(必要に応じて書き換える)
+# ============================================================
+# 4項目すべてを指定すると、起動時の種族/職業選択プロンプトが出なくなる。
+# 一部だけ指定した場合は残りを聞かれる。
+# OPTIONS=name:Claude
+# OPTIONS=role:Valkyrie,race:human,gender:female,align:neutral
