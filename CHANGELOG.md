@@ -40,8 +40,6 @@ mv <playground>/save/<uid><旧キャラクター名>.Z <playground>/save/<uid>Cl
 
 ## [1.0.0] - 2026-09-04
 
-初版。
-
 ### 追加
 
 - Claude Code に NetHack をプレイしてもらう Agent Skill 一式。
