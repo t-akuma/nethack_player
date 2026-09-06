@@ -200,6 +200,28 @@ NETHACKOPTIONS='@<skill>/assets/nethackrc' nethack
 - `mention_walls` / `mention_decor` — 壁にぶつかった、階段や祭壇に乗った、をメッセージで通知。停滞の検知に効きます
 - `autodescribe` / `whatis_coord:m` — 位置選択中にカーソル下の説明と座標を表示
 
+### セーブデータも分離されます
+
+スキルは `OPTIONS=name:Claude` でキャラクター名を固定しています。
+NetHack の**セーブは「キャラクター名 + uid」で識別される**ため、これにより
+あなた自身のゲームとは別のセーブ枠(`<uid>Claude.Z`)が使われます。
+
+この指定は、あなたが名前を指定しないでプレイしたセーブと Claude のセーブとを
+分離するためのものです。消さないでください。
+名前を省くと NetHack は `USER` → `LOGNAME` → `getlogin()` の順に探し、
+**結果としてログイン名がキャラクター名になります。**
+
+NetHack にセーブ選択メニューはなく、**名前を指定することがセーブを選ぶことそのもの**なので、
+手動で続きを遊ぶ場合は名前を渡します。
+
+```bash
+nethack -u Claude    # スキルのゲームを手動で再開
+```
+
+なお、ステータス行には `Claude the Stripling` のように表示されます
+(NetHack はステータス行では名前の先頭を大文字にして表示します)。
+画面を見ただけでスキルのゲームか個人のゲームか判別できます。
+
 ### 自分で遊ぶときもこの設定にしたい場合
 
 ```bash
@@ -229,6 +251,7 @@ cd .claude/skills/nethack-player
 | `scripts/cmux_nethack.sh status "<文>"` | cmux のサイドバーにステータス表示 |
 | `scripts/cmux_nethack.sh note "<文>"` | 進捗ログに追記(`~/.nethack_skill_log`) |
 | `scripts/cmux_nethack.sh history` | 進捗ログを表示 |
+| `scripts/cmux_nethack.sh saves` | セーブ枠(キャラクター名)の状況を調べる |
 | `scripts/cmux_nethack.sh locks` | 放置されたロックファイルを調べる |
 
 ## トラブルシューティング

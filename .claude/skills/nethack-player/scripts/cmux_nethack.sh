@@ -50,6 +50,7 @@ Usage:
   cmux_nethack.sh note "<text>"      進捗ログに1行追記
   cmux_nethack.sh history            進捗ログを表示
   cmux_nethack.sh attach <id>        既存ペインIDを手動で登録
+  cmux_nethack.sh saves              セーブ枠(キャラクター名)の状況を調べる
   cmux_nethack.sh locks              放置されたロックファイルを調べる
 EOF
 }
@@ -172,8 +173,14 @@ cmd_doctor() {
       done
     fi
 
+    check_present '^[^#]*OPTIONS=name:' \
+      "キャラクター名 (OPTIONS=name:) が未指定。NetHack はログイン名を使うため、ユーザー個人のセーブと同じ枠を使ってしまう恐れがあります。"
+
     [[ $problems -eq 0 ]] && echo "  問題なし。"
   fi
+
+  echo "── セーブ枠 ──"
+  cmd_saves
 
   echo "── 放置ロック ──"
   cmd_locks
@@ -183,6 +190,37 @@ cmd_doctor() {
     echo "点検終了: 問題は見つかりませんでした。"
   else
     echo "点検終了: ${problems} 件の指摘があります。"
+  fi
+}
+
+# セーブは「キャラクター名 + uid」で識別される。
+# 名前が衝突すると、ユーザー個人のゲームと同じセーブ枠を使ってしまう。
+cmd_saves() {
+  local dir; dir="$(playground_dir)"
+  if [[ -z "$dir" ]]; then echo "  プレイグラウンドの場所を特定できませんでした。"; return; fi
+  local savedir="${dir}/save"
+
+  local name
+  name="$(grep -Eh '^[^#]*OPTIONS=name:' "$RC_FILE" 2>/dev/null | sed -E 's/.*OPTIONS=name:([^,[:space:]]*).*/\1/' | head -1)"
+  if [[ -z "$name" ]]; then
+    echo "  スキルが使う名前: (未指定 → ログイン名 '${USER:-$(id -un)}' が使われます)"
+  else
+    echo "  スキルが使う名前: $name  → セーブ: $(id -u)${name}.Z"
+  fi
+
+  if [[ -d "$savedir" ]]; then
+    local found
+    found="$(ls "$savedir" 2>/dev/null | grep -vE '^\.keepme$' || true)"
+    if [[ -z "$found" ]]; then
+      echo "  既存のセーブ: なし"
+    else
+      echo "  既存のセーブ ($savedir):"
+      printf '    %s\n' $found
+      # 大文字小文字を無視して衝突を見る
+      if [[ -n "$name" ]] && printf '%s\n' $found | grep -qi "^$(id -u)${name}\.Z$"; then
+        echo "    ↑ このうち $(id -u)${name}.Z がスキルの続きです。"
+      fi
+    fi
   fi
 }
 
@@ -341,6 +379,7 @@ main() {
     alert)      cmd_alert "${1:-}" ;;
     note)       cmd_note "${1:-}" ;;
     history)    cmd_history ;;
+    saves)      cmd_saves ;;
     locks)      cmd_locks ;;
     ""|-h|--help|help) usage ;;
     *)          usage; exit 1 ;;

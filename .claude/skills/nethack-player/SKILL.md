@@ -46,7 +46,14 @@ NetHack はパーマデス(死んだらそのキャラは終わり)のゲーム�
    (既存はバックアップされるが、実行前に必ず確認する)。
 
 3. **キャラクター作成に付き合う。** `assets/nethackrc` は role/race/gender/align を
-   指定していないので、起動直後に順にメニューが出る:
+   指定していないので、起動直後に順にメニューが出る。
+
+   **名前は聞かれない。** `assets/nethackrc` が `OPTIONS=name:Claude` を指定しているため。
+   これはユーザー個人のセーブとスキルのセーブを分離するための設定で、**外してはいけない**。
+   名前を指定しないと NetHack はログイン名を使い、ユーザーのセーブと同じ枠を使うことになる。
+   ステータス行には `Claude the ...` と出る。
+
+   出るメニューは順に:
 
    - `Shall I pick character's race, role, gender and alignment for you? [ynaq]`
    - `Pick a role or profession` (`a` Archeologist … `v` Valkyrie、末尾に `(end)`)
