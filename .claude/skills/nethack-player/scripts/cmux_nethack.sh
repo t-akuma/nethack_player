@@ -299,11 +299,21 @@ cmd_keys() {
   cmux send --surface "$id" -- "$chars"
 }
 
-# 特殊キー(escape, enter, space, ctrl+c など)。キー名は小文字化して解釈される。
+# 特殊キー(escape, enter, ctrl+r, 矢印など)。キー名は小文字化して解釈される。
+#
+# 例外: space は send-key では届かない。実測 (cmux 0.64) で 0/20。
+# 空白が送られず、直前直後の文字が連結される:
+#   send "echo" / send-key space / send "X"  →  "echoX"
+# 一方 send " " は 20/20 で通る。そのため space だけテキスト送信に落とす。
+# enter は send-key でも 30/30 通るため、そのままにしてある。
 cmd_key() {
   local keyname="${1:-}"
   [[ -n "$keyname" ]] || die "キー名を指定してください (escape / enter / space ...)。"
   local id; id="$(get_surface)" || exit 1
+  if [[ "$(printf '%s' "$keyname" | tr '[:upper:]' '[:lower:]')" == "space" ]]; then
+    cmux send --surface "$id" -- " "
+    return
+  fi
   cmux send-key --surface "$id" -- "$keyname"
 }
 

@@ -95,7 +95,29 @@ cmux send --surface "$s" -- h j k l     # NG: "h j k l" になりスペースが
 `enter` / `return`、`escape` / `esc`、`space`、`tab`、`backtab`、`backspace`、`delete`、`up` / `down` / `left` / `right`、`home`、`end`、`pageup`、`pagedown`、および単一の英字。
 修飾キーは `+` でも `-` でも連結でき、`ctrl` / `control`、`shift`、`alt` / `option`、`cmd` / `command` が使える(例 `ctrl+c`、`ctrl-c`)。
 
-Escape は `send` では送れないので必ず `send-key escape`。`--More--` を進める Space は `send-key space` でも `cmux send -- " "` でもよい。
+### Space は `send-key` で送れない
+
+**`send-key space` は空白を送らない。** 実測 (cmux 0.64) で 20回中0回しか通らず、
+空白が抜けて前後の文字が連結される:
+
+```
+send "echo" → send-key space → send "X"   結果: "echoX"
+send "echo" → send " "        → send "X"   結果: "echo X"
+```
+
+`--More--` を進める Space は **必ず `cmux send -- " "`(= `keys " "`)で送る。**
+`scripts/cmux_nethack.sh` の `key space` は内部でテキスト送信に落としてあるので、
+どちらの書き方でも安全。
+
+Enter は `send-key enter` でも `send -- '\n'` でも通る(実測 30/30)。
+Escape は `send` では送れないので必ず `send-key escape`。
+
+### 記号キーも `send` で送る
+
+`\` `:` `^` `[` `@` は JIS と US でキーの位置が違う。`send-key` がキーコードを
+経由する実装なら、環境によって別の文字になりうる。NetHack はこれらをすべて
+コマンドに使う(`\` 識別済み一覧、`:` 足元、`^` 罠、`[` 防具、`@` autopickup)。
+テキスト送信ならバイト列がそのまま渡るので、配列にも IME にも影響されない。
 
 ## 画面読み取り
 
