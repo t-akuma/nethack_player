@@ -3,6 +3,27 @@
 このファイルの書式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に、
 バージョン番号は [Semantic Versioning](https://semver.org/lang/ja/) に従います。
 
+## [1.1.2] - 2026-09-07
+
+### 修正
+
+- `key space` でスペースが送られない問題を修正しました。
+
+  cmux の `send-key` は空白を届けません(実測で20回中0回)。空白が抜けて
+  前後の文字が連結されるため、`--More--` を進めるつもりが進まず、
+  停滞として誤検知される状態になっていました。
+
+  ```
+  send "echo" → send-key space → send "X"   結果: "echoX"
+  send "echo" → send " "        → send "X"   結果: "echo X"
+  ```
+
+  `key space` を受け取った場合、内部でテキスト送信に切り替えるようにしました。
+  呼び出し側が `key space` と `keys " "` のどちらで書いても正しく届きます。
+
+  なお Enter は `send-key` でも問題なく届くため(実測で30回中30回)、
+  変更していません。
+
 ## [1.1.1] - 2026-09-07
 
 ### 修正
@@ -78,6 +99,7 @@ mv <playground>/save/<uid><旧キャラクター名>.Z <playground>/save/<uid>Cl
   - **完全放置モード** — 死亡またはゲームクリアまで続けます。
     停滞やゲームの異常終了を検知した場合は安全弁として停止します。
 
+[1.1.2]: https://github.com/t-akuma/nethack_player/releases/tag/v1.1.2
 [1.1.1]: https://github.com/t-akuma/nethack_player/releases/tag/v1.1.1
 [1.1.0]: https://github.com/t-akuma/nethack_player/releases/tag/v1.1.0
 [1.0.0]: https://github.com/t-akuma/nethack_player/releases/tag/v1.0.0
