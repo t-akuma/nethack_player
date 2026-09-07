@@ -31,8 +31,8 @@ NetHack はパーマデス(死んだらそのキャラは終わり)のゲーム�
    cmux のコマンド詳細は `references/cmux-usage.md`。
 
    **設定ファイルは `assets/nethackrc` を使う。`~/.nethackrc` は読まないし書き換えない。**
-   `start` は `NETHACKOPTIONS='@<skill>/assets/nethackrc' nethack` で起動する。
-   `@` 付きの `NETHACKOPTIONS` は「このファイルだけを設定として読む」指定なので、
+   `start` は `nethack --nethackrc:<rcのパス> -u Claude` で起動する。
+   `--nethackrc:` は「このファイルを設定として読む」指定なので、
    ユーザー個人の `~/.nethackrc`(職業、ペット名、キーバインドの好み)は
    一切混ざらない。**スキルのプレイのためにユーザーの設定を退避させる必要はない。**
 
@@ -118,7 +118,7 @@ scripts/cmux_nethack.sh read
 | Escape / Return などの特殊キー | `scripts/cmux_nethack.sh key escape` | — |
 | **拡張コマンド (`#pray` 等)** | `scripts/cmux_nethack.sh ext pray` | **`#pray` + Enter** |
 | 文字列の回答("yes"、アイテム名など) | `scripts/cmux_nethack.sh answer "yes"` | 付く |
-| シェルコマンド(ゲーム起動時のみ) | `scripts/cmux_nethack.sh run "nethack"` | 付く |
+| シェルコマンド(通常は `start` が内部で使う) | `scripts/cmux_nethack.sh run "<コマンド>"` | 付く |
 
 **拡張コマンドは Enter を送らないと実行されない。** `keys "#pray"` だけでは
 入力途中のまま止まり、次に送ったキーがコマンド名の続きとして食われる。必ず `ext` を使う。

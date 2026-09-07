@@ -24,7 +24,7 @@ LOG_FILE="${HOME}/.nethack_skill_log"
 SETTLE_SECONDS="${NETHACK_SETTLE_SECONDS:-0.4}"
 
 # このスキルがゲームに読ませる設定ファイル。
-# 'start' は NETHACKOPTIONS=@<file> で起動するので、~/.nethackrc は読まれない。
+# 'start' は nethack --nethackrc:<file> で起動するので、~/.nethackrc は読まれない。
 # ユーザー個人の ~/.nethackrc をスキルが書き換えたり参照したりすることはない。
 RC_FILE="${NETHACK_RC:-${SKILL_DIR}/assets/nethackrc}"
 
@@ -32,7 +32,7 @@ usage() {
   cat <<'EOF'
 Usage:
   cmux_nethack.sh start              右側にペインを分割してnethackを起動
-                                     (assets/nethackrc を NETHACKOPTIONS で直接読ませる。
+                                     (assets/nethackrc を --nethackrc: で直接読ませる。
                                       ~/.nethackrc には触れないし読まない)
   cmux_nethack.sh doctor             環境と設定ファイルを点検する(起動前に推奨)
   cmux_nethack.sh install-rc         [任意] assets/nethackrc を ~/.nethackrc にも導入する
@@ -78,6 +78,12 @@ playground_dir() {
   printf ''
 }
 
+# 設定ファイルから OPTIONS=name: の値を取り出す。起動時の -u と saves で共用する。
+rc_name() {
+  grep -Eh '^[^#]*OPTIONS=name:' "$RC_FILE" 2>/dev/null \
+    | sed -E 's/.*OPTIONS=name:([^,[:space:]]*).*/\1/' | head -1
+}
+
 cmd_attach() {
   local id="${1:-}"
   [[ -n "$id" ]] || die "ペイン/サーフェスIDを指定してください。"
@@ -85,7 +91,7 @@ cmd_attach() {
   echo "登録しました: $id"
 }
 
-# 任意。スキルのプレイには不要(start は NETHACKOPTIONS 経由で assets を直接読む)。
+# 任意。スキルのプレイには不要(start は --nethackrc: で assets を直接読む)。
 # ユーザーが「自分で遊ぶときもこの設定を既定にしたい」場合だけ使う。
 # 既存があれば必ずバックアップを取り、上書き前に知らせる。
 cmd_install_rc() {
@@ -131,7 +137,7 @@ cmd_doctor() {
   echo "── 使用する設定ファイル ──"
   echo "  $rc"
   if [[ -f "${HOME}/.nethackrc" ]]; then
-    echo "  (~/.nethackrc は存在しますが、NETHACKOPTIONS=@ 指定のため読まれません)"
+    echo "  (~/.nethackrc は存在しますが、--nethackrc: 指定のため読まれません)"
   fi
   if [[ ! -f "$rc" ]]; then
     echo "  NG: このファイルがありません。"
@@ -200,8 +206,7 @@ cmd_saves() {
   if [[ -z "$dir" ]]; then echo "  プレイグラウンドの場所を特定できませんでした。"; return; fi
   local savedir="${dir}/save"
 
-  local name
-  name="$(grep -Eh '^[^#]*OPTIONS=name:' "$RC_FILE" 2>/dev/null | sed -E 's/.*OPTIONS=name:([^,[:space:]]*).*/\1/' | head -1)"
+  local name; name="$(rc_name)"
   if [[ -z "$name" ]]; then
     echo "  スキルが使う名前: (未指定 → ログイン名 '${USER:-$(id -un)}' が使われます)"
   else
@@ -274,10 +279,14 @@ if v:
   printf '%s' "$surface_id" > "$STATE_FILE"
   echo "NetHack用サーフェス: $surface_id"
 
-  # NETHACKOPTIONS=@<file> は「その1ファイルだけを設定として読む」指定で、
-  # ~/.nethackrc は読まれなくなる。スキルの設定とユーザー個人の設定が混ざらない。
-  cmd_run "NETHACKOPTIONS='@${RC_FILE}' nethack"
+  # --nethackrc:<file> は「そのファイルを設定として読む」指定で、~/.nethackrc は読まれない。
+  # -u <name> はキャラクター名を強制する。設定ファイルより優先されるため、
+  # 万一 rc が読めなくてもユーザーのセーブ枠を侵さない(NetHack は rc が読めないと
+  # 警告を1つ出すだけで ~/.nethackrc にフォールバックして起動してしまう)。
+  local name; name="$(rc_name)"
+  cmd_run "nethack --nethackrc:'${RC_FILE}'${name:+ -u ${name}}"
   echo "設定: $RC_FILE (~/.nethackrc は読まれません)"
+  [[ -n "$name" ]] && echo "キャラクター名: $name"
   echo "起動しました。'read' で画面を確認してください。"
 }
 

@@ -171,10 +171,11 @@ Healer(戦闘力が低い)は、自動プレイでは事故率が上がるため
 このスキルは専用の設定ファイル `assets/nethackrc` を使います。起動時に
 
 ```bash
-NETHACKOPTIONS='@<skill>/assets/nethackrc' nethack
+nethack --nethackrc:<スキルのパス>/assets/nethackrc -u Claude
 ```
 
-の形で読ませるため、**あなた個人の `~/.nethackrc` は読まれも書き換えられもしません。**
+の形で起動するため、**あなた個人の `~/.nethackrc` は読まれも書き換えられもしません。**
+パスは `scripts/cmux_nethack.sh` が実行時に算出するので、クローン先がどこでも構いません。
 普段ご自身で遊ぶときの設定(職業の好み、ペットの名前、キーバインド)はそのままで大丈夫です。
 
 ### なぜ専用の設定が要るのか

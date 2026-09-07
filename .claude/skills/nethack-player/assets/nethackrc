@@ -6,15 +6,15 @@
 #   3. 起動時の余計なプロンプトを消す
 #
 # 使い方: scripts/cmux_nethack.sh start が
-#   NETHACKOPTIONS='@<このファイル>' nethack
+#   nethack --nethackrc:<このファイル> -u Claude
 # の形で起動するため、~/.nethackrc にコピーする必要は無い。
-# '@' 付きの NETHACKOPTIONS は「このファイルだけを設定として読む」指定なので、
+# --nethackrc: は「このファイルを設定として読む」指定なので、
 # ユーザー個人の ~/.nethackrc は読まれない(実測で確認済み)。
 #
 # これは「人が遊ぶための設定」ではなく「画面を機械的に読むための設定」である。
 # 色もメニューの装飾も無く、人間が遊ぶには不便なので、ユーザーの既定にはしないこと。
 #
-# 検証方法: NETHACKOPTIONS=@<path> でこのファイルを読ませて起動し、
+# 検証方法: nethack --nethackrc:<path> でこのファイルを読ませて起動し、
 # "Error: ..." が出ないことを確認した (NetHack 5.0.0 MacOS build)。
 
 
