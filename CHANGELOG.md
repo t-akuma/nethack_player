@@ -3,6 +3,29 @@
 このファイルの書式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に、
 バージョン番号は [Semantic Versioning](https://semver.org/lang/ja/) に従います。
 
+## [1.1.1] - 2026-09-07
+
+### 修正
+
+- NetHack の起動方法を、環境変数 `NETHACKOPTIONS=@<file>` から
+  コマンドライン引数 `--nethackrc:<file>` と `-u <name>` に変更しました。
+
+  従来の方式では、設定ファイルのパスが何らかの理由で解決できなかった場合に
+  問題がありました。NetHack は設定ファイルを読めないとき、警告を1つ表示して
+  Enter を待つだけで停止せず、そのまま `~/.nethackrc` にフォールバックして
+  起動します。Claude からは「プロンプトを1つ消したら普通に始まった」ようにしか
+  見えないため、気づかないままユーザー個人の設定とセーブ枠でプレイしてしまう
+  恐れがありました。
+
+  新しい方式では `-u` がキャラクター名を強制します。`-u` は設定ファイルより
+  優先されるため、**万一 rc が読めなくてもセーブ枠は分離されたまま**です。
+
+### 変更
+
+- 設定ファイルから `OPTIONS=name:` を読み取る処理を `rc_name()` に共通化しました。
+  起動時の `-u` と `saves` の表示が同じ値を参照するため、設定を書き換えれば
+  起動も追従します。
+
 ## [1.1.0] - 2026-09-06
 
 ### 追加
@@ -55,5 +78,6 @@ mv <playground>/save/<uid><旧キャラクター名>.Z <playground>/save/<uid>Cl
   - **完全放置モード** — 死亡またはゲームクリアまで続けます。
     停滞やゲームの異常終了を検知した場合は安全弁として停止します。
 
+[1.1.1]: https://github.com/t-akuma/nethack_player/releases/tag/v1.1.1
 [1.1.0]: https://github.com/t-akuma/nethack_player/releases/tag/v1.1.0
 [1.0.0]: https://github.com/t-akuma/nethack_player/releases/tag/v1.0.0
